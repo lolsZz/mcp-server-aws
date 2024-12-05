@@ -1,127 +1,70 @@
 # AWS MCP Server
 
-An MCP server implementation for AWS operations, supporting S3 and DynamoDB services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
+A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that currently supports S3 and DynamoDB services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
 
 See a demo video [here](https://www.loom.com/share/99551eeb2e514e7eaf29168c47f297d1?sid=4eb54324-5546-4f44-99a0-947f80b9365c).
 
-## Setup
+(Originally implemented within the [MCP servers repository](https://github.com/modelcontextprotocol/servers/pull/154/) but now added as a [Community Server](https://github.com/modelcontextprotocol/servers?tab=readme-ov-file#-community-servers) instead)
 
-1. Install dependencies
-2. Configure AWS credentials using either:
-   - Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`)
-   - AWS credentials file
-3. Run the server
+## Running locally with the Claude desktop app
+
+1. Clone this repository.
+2. Set up your AWS credentials via one of the two methods below. Note that this server requires an IAM user with RW permissions for your AWS account for S3 and DynamoDB.
+- Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (defaults to `us-east-1`)
+- Default AWS credential chain (set up via AWS CLI with `aws configure`)
+3. Add the following to your `claude_desktop_config.json` file:
+- On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
+- On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+```
+"mcpServers": {
+  "mcp-server-aws": {
+    "command": "uv",
+    "args": [
+      "--directory",
+      "/path/to/repo/mcp-server-aws",
+      "run",
+      "mcp-server-aws"
+    ]
+  }
+}
+```
+4. Install and open the [Claude desktop app](https://claude.ai/download).
+5. Try asking Claude to do a read/write operation of some sort to confirm the setup (e.g. create an S3 bucket and give it a random name). If there are issues, use the Debugging tools provided in the MCP documentation [here](https://modelcontextprotocol.io/docs/tools/debugging).
 
 ## Available Tools
 
 ### S3 Operations
 
 - **s3_bucket_create**: Create a new S3 bucket
-  - Required: `bucket_name`
-
 - **s3_bucket_list**: List all S3 buckets
-
 - **s3_bucket_delete**: Delete an S3 bucket
-  - Required: `bucket_name`
-
 - **s3_object_upload**: Upload an object to S3
-  - Required: `bucket_name`, `object_key`, `file_content` (Base64 encoded)
-
 - **s3_object_delete**: Delete an object from S3
-  - Required: `bucket_name`, `object_key`
-
 - **s3_object_list**: List objects in an S3 bucket
-  - Required: `bucket_name`
-
 - **s3_object_read**: Read an object's content from S3
-  - Required: `bucket_name`, `object_key`
+
 
 ### DynamoDB Operations
 
 #### Table Operations
 - **dynamodb_table_create**: Create a new DynamoDB table
-  - Required: `table_name`, `key_schema`, `attribute_definitions`
-
 - **dynamodb_table_describe**: Get details about a DynamoDB table
-  - Required: `table_name`
-
-- **dynamodb_table_list**: List all DynamoDB tables
-
 - **dynamodb_table_delete**: Delete a DynamoDB table
-  - Required: `table_name`
-
 - **dynamodb_table_update**: Update a DynamoDB table
-  - Required: `table_name`, `attribute_definitions`
 
 #### Item Operations
 - **dynamodb_item_put**: Put an item into a DynamoDB table
-  - Required: `table_name`, `item`
-
 - **dynamodb_item_get**: Get an item from a DynamoDB table
-  - Required: `table_name`, `key`
-
 - **dynamodb_item_update**: Update an item in a DynamoDB table
-  - Required: `table_name`, `key`, `item`
-
 - **dynamodb_item_delete**: Delete an item from a DynamoDB table
-  - Required: `table_name`, `key`
-
 - **dynamodb_item_query**: Query items in a DynamoDB table
-  - Required: `table_name`, `key_condition`, `expression_values`
-
 - **dynamodb_item_scan**: Scan items in a DynamoDB table
-  - Required: `table_name`
-  - Optional: `filter_expression`, `expression_attributes` (with `values` and `names`)
-
 #### Batch Operations
 - **dynamodb_batch_get**: Batch get multiple items from DynamoDB tables
-  - Required: `request_items`
-
 - **dynamodb_item_batch_write**: Batch write operations (put/delete) for DynamoDB items
-  - Required: `table_name`, `operation` (put/delete), `items`
-  - Optional: `key_attributes` (for delete operations)
-
 - **dynamodb_batch_execute**: Execute multiple PartiQL statements in a batch
-  - Required: `statements`, `parameters`
 
 #### TTL Operations
 - **dynamodb_describe_ttl**: Get the TTL settings for a table
-  - Required: `table_name`
-
 - **dynamodb_update_ttl**: Update the TTL settings for a table
-  - Required: `table_name`, `ttl_enabled`, `ttl_attribute`
-
-## Configuration
-
-The server requires AWS credentials to be configured in one of these ways:
-- Environment variables: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-- Default AWS credential chain (e.g., AWS CLI configuration)
-
-Additional configuration:
-- AWS_REGION (defaults to "us-east-1")
-
-## Quickstart
-
-### Install
-
-#### Claude Desktop
-
-On MacOS: `~/Library/Application\ Support/Claude/claude_desktop_config.json`
-On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-
-<details>
-  <summary>Development/Unpublished Servers Configuration</summary>
-  ```
-  "mcpServers": {
-    "mcp-server-aws": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/to/repo/servers/src/aws",
-        "run",
-        "mcp-server-aws"
-      ]
-    }
-  }
-  ```
-</details>
