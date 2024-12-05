@@ -4,7 +4,7 @@ A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol
 
 See a demo video [here](https://www.loom.com/share/99551eeb2e514e7eaf29168c47f297d1?sid=4eb54324-5546-4f44-99a0-947f80b9365c).
 
-(Originally implemented within the [MCP servers repository](https://github.com/modelcontextprotocol/servers/pull/154/) but now added as a [Community Server](https://github.com/modelcontextprotocol/servers?tab=readme-ov-file#-community-servers) instead)
+Listed as a [Community Server](https://github.com/modelcontextprotocol/servers?tab=readme-ov-file#-community-servers) within the MCP servers repository.
 
 ## Running locally with the Claude desktop app
 
