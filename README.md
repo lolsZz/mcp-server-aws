@@ -1,5 +1,7 @@
 # AWS MCP Server
 
+[![smithery badge](https://smithery.ai/badge/mcp-server-aws)](https://smithery.ai/server/mcp-server-aws)
+
 A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that currently supports S3 and DynamoDB services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
 
 See a demo video [here](https://www.loom.com/share/99551eeb2e514e7eaf29168c47f297d1?sid=4eb54324-5546-4f44-99a0-947f80b9365c).
@@ -8,6 +10,15 @@ Listed as a [Community Server](https://github.com/modelcontextprotocol/servers?t
 
 ## Running locally with the Claude desktop app
 
+### Installing via Smithery
+
+To install AWS MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/mcp-server-aws):
+
+```bash
+npx -y @smithery/cli install mcp-server-aws --client claude
+```
+
+### Manual Installation
 1. Clone this repository.
 2. Set up your AWS credentials via one of the two methods below. Note that this server requires an IAM user with RW permissions for your AWS account for S3 and DynamoDB.
 - Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (defaults to `us-east-1`)
