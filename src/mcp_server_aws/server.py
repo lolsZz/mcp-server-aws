@@ -140,7 +140,10 @@ async def main():
         response = None
 
         if name == "s3_bucket_create":
-            response = s3_client.create_bucket(Bucket=arguments["bucket_name"])
+            response = s3_client.create_bucket(Bucket=arguments["bucket_name"],
+                                               CreateBucketConfiguration={
+                                                   'LocationConstraint': os.getenv("AWS_REGION") or 'us-east-1'
+                                               })
         elif name == "s3_bucket_list":
             response = s3_client.list_buckets()
         elif name == "s3_bucket_delete":
