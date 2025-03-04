@@ -18,27 +18,28 @@ from pydantic import AnyUrl
 from .tools import get_aws_tools
 from .utils import get_dynamodb_type
 
-load_dotenv()
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("aws-mcp-server")
+# Configure root logger and all other loggers to WARNING
+logging.basicConfig(level=logging.WARNING)
+for logger_name in logging.root.manager.loggerDict:
+    logging.getLogger(logger_name).setLevel(logging.WARNING)
 
+# Configure our specific logger
+logger = logging.getLogger("aws-mcp-server")
+logger.setLevel(logging.WARNING)
 
 def custom_json_serializer(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
-
 class AWSManager:
     def __init__(self):
-        logger.info("Initializing AWSManager")
         self.audit_entries: list[dict] = []
 
     @lru_cache(maxsize=None)
     def get_boto3_client(self, service_name: str, region_name: str = None):
         """Get a boto3 client using explicit credentials if available"""
         try:
-            logger.info(f"Creating boto3 client for service: {service_name}")
             region_name = region_name or os.getenv("AWS_REGION", "us-east-1")
             if not region_name:
                 raise ValueError(
@@ -60,13 +61,11 @@ class AWSManager:
 
             return session.client(service_name)
         except Exception as e:
-            logger.error(f"Failed to create boto3 client for {
-                         service_name}: {e}")
+            logger.error(f"Failed to create boto3 client for {service_name}: {e}")
             raise RuntimeError(f"Failed to create boto3 client: {e}")
 
     def _synthesize_audit_log(self) -> str:
         """Generate formatted audit log from entries"""
-        logger.debug("Synthesizing audit log")
         if not self.audit_entries:
             return "No AWS operations have been performed yet."
 
@@ -75,16 +74,13 @@ class AWSManager:
             report += f"[{entry['timestamp']}]\n"
             report += f"Service: {entry['service']}\n"
             report += f"Operation: {entry['operation']}\n"
-            report += f"Parameters: {json.dumps(
-                entry['parameters'], indent=2)}\n"
+            report += f"Parameters: {json.dumps(entry['parameters'], indent=2)}\n"
             report += "-" * 50 + "\n"
 
         return report
 
     def log_operation(self, service: str, operation: str, parameters: dict) -> None:
         """Log an AWS operation to the audit log"""
-        logger.info(
-            f"Logging operation - Service: {service}, Operation: {operation}")
         audit_entry = {
             "timestamp": datetime.utcnow().isoformat(),
             "service": service,
@@ -93,18 +89,12 @@ class AWSManager:
         }
         self.audit_entries.append(audit_entry)
 
-
-async def main():
-    logger.info("Starting AWS MCP Server")
-
+def _get_server():
     aws = AWSManager()
     server = Server("aws-mcp-server")
 
-    logger.debug("Registering handlers")
-
     @server.list_resources()
     async def handle_list_resources() -> list[Resource]:
-        logger.debug("Handling list_resources request")
         return [
             Resource(
                 uri=AnyUrl("audit://aws-operations"),
@@ -116,7 +106,6 @@ async def main():
 
     @server.read_resource()
     async def handle_read_resource(uri: AnyUrl) -> str:
-        logger.debug(f"Handling read_resource request for URI: {uri}")
         if uri.scheme != "audit":
             logger.error(f"Unsupported URI scheme: {uri.scheme}")
             raise ValueError(f"Unsupported URI scheme: {uri.scheme}")
@@ -131,7 +120,6 @@ async def main():
     @server.list_tools()
     async def list_tools() -> list[Tool]:
         """List available AWS tools"""
-        logger.debug("Handling list_tools request")
         return get_aws_tools()
 
     async def handle_s3_operations(aws: AWSManager, name: str, arguments: dict) -> list[TextContent]:
@@ -141,9 +129,9 @@ async def main():
 
         if name == "s3_bucket_create":
             response = s3_client.create_bucket(Bucket=arguments["bucket_name"],
-                                               CreateBucketConfiguration={
-                                                   'LocationConstraint': os.getenv("AWS_REGION") or 'us-east-1'
-                                               })
+                                            CreateBucketConfiguration={
+                                                'LocationConstraint': os.getenv("AWS_REGION") or 'us-east-1'
+                                            })
         elif name == "s3_bucket_list":
             response = s3_client.list_buckets()
         elif name == "s3_bucket_delete":
@@ -162,7 +150,6 @@ async def main():
             response = s3_client.list_objects_v2(
                 Bucket=arguments["bucket_name"])
         elif name == "s3_object_read":
-            logging.info(f"Reading object: {arguments['object_key']}")
             response = s3_client.get_object(
                 Bucket=arguments["bucket_name"],
                 Key=arguments["object_key"]
@@ -295,8 +282,7 @@ async def main():
                     response = dynamodb_client.batch_write_item(
                         RequestItems=request_items)
                     processed_items += len(batch) - len(
-                        response.get('UnprocessedItems', {}
-                                     ).get(table_name, [])
+                        response.get('UnprocessedItems', {}).get(table_name, [])
                     )
 
                     unprocessed = response.get('UnprocessedItems', {})
@@ -306,8 +292,7 @@ async def main():
                         await asyncio.sleep(2 ** retry_count)
                         retry_response = dynamodb_client.batch_write_item(
                             RequestItems=unprocessed)
-                        unprocessed = retry_response.get(
-                            'UnprocessedItems', {})
+                        unprocessed = retry_response.get('UnprocessedItems', {})
                         retry_count += 1
 
                     if unprocessed:
@@ -342,9 +327,6 @@ async def main():
     @server.call_tool()
     async def call_tool(name: str, arguments: Any) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
         """Handle AWS tool operations"""
-        logger.info(f"Handling tool call: {name}")
-        logger.debug(f"Tool arguments: {arguments}")
-
         if not isinstance(arguments, dict):
             logger.error("Invalid arguments: not a dictionary")
             raise ValueError("Invalid arguments")
@@ -361,8 +343,11 @@ async def main():
             logger.error(f"Operation failed: {str(e)}")
             raise RuntimeError(f"Operation failed: {str(e)}")
 
+    return server, aws
+
+async def main():
+    server, aws = _get_server()
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        logger.info("Server running with stdio transport")
         await server.run(
             read_stream,
             write_stream,
