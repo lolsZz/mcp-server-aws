@@ -12,6 +12,10 @@ def get_s3_tools() -> list[Tool]:
                     "bucket_name": {
                         "type": "string",
                         "description": "Name of the S3 bucket to create"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "AWS region where the bucket should be created (e.g., us-west-2)"
                     }
                 },
                 "required": ["bucket_name"]
@@ -447,8 +451,301 @@ def get_dynamodb_tools() -> list[Tool]:
     ]
 
 
+def get_ec2_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="ec2_list_instances",
+            description="List EC2 instances and their details",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "filters": {
+                        "type": "array",
+                        "description": "Optional filters to apply",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "Name": {"type": "string"},
+                                "Values": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="ec2_start_instances",
+            description="Start one or more EC2 instances",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "instance_ids": {
+                        "type": "array",
+                        "description": "List of instance IDs to start",
+                        "items": {"type": "string"}
+                    }
+                },
+                "required": ["instance_ids"]
+            }
+        ),
+        Tool(
+            name="ec2_stop_instances",
+            description="Stop one or more EC2 instances",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "instance_ids": {
+                        "type": "array",
+                        "description": "List of instance IDs to stop",
+                        "items": {"type": "string"}
+                    }
+                },
+                "required": ["instance_ids"]
+            }
+        ),
+        Tool(
+            name="ec2_describe_instance",
+            description="Get detailed information about an EC2 instance",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "instance_id": {
+                        "type": "string",
+                        "description": "ID of the instance to describe"
+                    }
+                },
+                "required": ["instance_id"]
+            }
+        )
+    ]
+
+def get_lambda_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="lambda_list_functions",
+            description="List all Lambda functions",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "max_items": {
+                        "type": "integer",
+                        "description": "Maximum number of functions to return"
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="lambda_invoke",
+            description="Invoke a Lambda function",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "function_name": {
+                        "type": "string",
+                        "description": "Name or ARN of the Lambda function"
+                    },
+                    "payload": {
+                        "type": "object",
+                        "description": "JSON payload to send to the function"
+                    },
+                    "invocation_type": {
+                        "type": "string",
+                        "enum": ["RequestResponse", "Event", "DryRun"],
+                        "description": "Invocation type for the Lambda function"
+                    }
+                },
+                "required": ["function_name"]
+            }
+        ),
+        Tool(
+            name="lambda_get_function",
+            description="Get information about a Lambda function",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "function_name": {
+                        "type": "string",
+                        "description": "Name or ARN of the Lambda function"
+                    }
+                },
+                "required": ["function_name"]
+            }
+        )
+    ]
+
+def get_cloudwatch_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="cloudwatch_get_metrics",
+            description="Get CloudWatch metrics for a resource",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "namespace": {
+                        "type": "string",
+                        "description": "Namespace of the metric (e.g., AWS/EC2)"
+                    },
+                    "metric_name": {
+                        "type": "string",
+                        "description": "Name of the metric"
+                    },
+                    "dimensions": {
+                        "type": "array",
+                        "description": "Dimensions to filter the metric",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "Name": {"type": "string"},
+                                "Value": {"type": "string"}
+                            }
+                        }
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO format"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO format"
+                    },
+                    "period": {
+                        "type": "integer",
+                        "description": "Period in seconds"
+                    }
+                },
+                "required": ["namespace", "metric_name"]
+            }
+        ),
+        Tool(
+            name="cloudwatch_list_metrics",
+            description="List available CloudWatch metrics",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "namespace": {
+                        "type": "string",
+                        "description": "Optional namespace to filter metrics"
+                    },
+                    "metric_name": {
+                        "type": "string",
+                        "description": "Optional metric name to filter"
+                    }
+                }
+            }
+        ),
+        Tool(
+            name="cloudwatch_get_logs",
+            description="Get CloudWatch logs from a log group",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "log_group_name": {
+                        "type": "string",
+                        "description": "Name of the log group"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO format"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO format"
+                    },
+                    "filter_pattern": {
+                        "type": "string",
+                        "description": "Optional filter pattern for the logs"
+                    }
+                },
+                "required": ["log_group_name"]
+            }
+        )
+    ]
+
+def get_bedrock_tools() -> list[Tool]:
+    return [
+        Tool(
+            name="bedrock_get_model_stats",
+            description="Get detailed usage statistics for a Bedrock model",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model_id": {
+                        "type": "string",
+                        "description": "Bedrock model ID (e.g., anthropic.claude-3-sonnet-20240229-v1:0)"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "AWS region (e.g., us-west-2)"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "description": "Start time in ISO format"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "description": "End time in ISO format"
+                    }
+                },
+                "required": ["model_id", "region"]
+            }
+        ),
+        Tool(
+            name="bedrock_analyze_requests",
+            description="Analyze Bedrock API requests to get token statistics",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model_id": {
+                        "type": "string",
+                        "description": "Bedrock model ID"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "AWS region"
+                    },
+                    "time_period_hours": {
+                        "type": "integer",
+                        "description": "Number of hours to analyze",
+                        "default": 24
+                    }
+                },
+                "required": ["model_id", "region"]
+            }
+        ),
+        Tool(
+            name="bedrock_get_token_metrics",
+            description="Get token usage metrics for a Bedrock model",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model_id": {
+                        "type": "string",
+                        "description": "Bedrock model ID"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "AWS region"
+                    },
+                    "period": {
+                        "type": "integer",
+                        "description": "Period in minutes to analyze",
+                        "default": 60
+                    }
+                },
+                "required": ["model_id", "region"]
+            }
+        )
+    ]
+
 def get_aws_tools() -> list[Tool]:
     return [
         *get_s3_tools(),
-        *get_dynamodb_tools()
+        *get_dynamodb_tools(),
+        *get_ec2_tools(),
+        *get_lambda_tools(),
+        *get_cloudwatch_tools(),
+        *get_bedrock_tools()
     ]

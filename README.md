@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/mcp-server-aws)](https://smithery.ai/server/mcp-server-aws)
 
-A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that currently supports S3 and DynamoDB services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
+A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that supports S3, DynamoDB, EC2, Lambda, and CloudWatch services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
 
 See a demo video [here](https://www.loom.com/share/99551eeb2e514e7eaf29168c47f297d1?sid=4eb54324-5546-4f44-99a0-947f80b9365c).
 
@@ -45,6 +45,14 @@ npx -y @smithery/cli install mcp-server-aws --client claude
 
 ## Available Tools
 
+### Bedrock Operations
+- **bedrock_get_model_stats**: Get detailed usage statistics for a Bedrock model, including invocations, token counts, and latency metrics
+- **bedrock_analyze_requests**: Analyze Bedrock API requests to get detailed token statistics, including:
+  - Average input/output tokens per request
+  - Total requests and token counts
+  - Request patterns over time
+- **bedrock_get_token_metrics**: Get detailed TPM (tokens per minute) and RPM (requests per minute) metrics with peak and average values
+
 ### S3 Operations
 
 - **s3_bucket_create**: Create a new S3 bucket
@@ -79,3 +87,22 @@ npx -y @smithery/cli install mcp-server-aws --client claude
 #### TTL Operations
 - **dynamodb_describe_ttl**: Get the TTL settings for a table
 - **dynamodb_update_ttl**: Update the TTL settings for a table
+
+### EC2 Operations
+- **ec2_list_instances**: List EC2 instances and their details with optional filters
+- **ec2_start_instances**: Start one or more EC2 instances
+- **ec2_stop_instances**: Stop one or more EC2 instances
+- **ec2_describe_instance**: Get detailed information about an EC2 instance
+
+### Lambda Operations
+- **lambda_list_functions**: List all Lambda functions
+- **lambda_invoke**: Invoke a Lambda function with custom payload
+- **lambda_get_function**: Get detailed information about a Lambda function
+
+### CloudWatch Operations
+#### Metrics
+- **cloudwatch_get_metrics**: Get CloudWatch metrics for a resource
+- **cloudwatch_list_metrics**: List available CloudWatch metrics
+
+#### Logs
+- **cloudwatch_get_logs**: Get CloudWatch logs from a log group with optional filtering
