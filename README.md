@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/mcp-server-aws)](https://smithery.ai/server/mcp-server-aws)
 
-A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that supports S3, DynamoDB, EC2, Lambda, and CloudWatch services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint.
+A [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) server implementation for AWS operations that supports S3, DynamoDB, EC2, Lambda, CloudWatch, and Bedrock services. All operations are automatically logged and can be accessed through the `audit://aws-operations` resource endpoint. Features comprehensive logging support for Bedrock model invocations with both standard and large data handling capabilities.
 
 See a demo video [here](https://www.loom.com/share/99551eeb2e514e7eaf29168c47f297d1?sid=4eb54324-5546-4f44-99a0-947f80b9365c).
 
@@ -20,7 +20,16 @@ npx -y @smithery/cli install mcp-server-aws --client claude
 
 ### Manual Installation
 1. Clone this repository.
-2. Set up your AWS credentials via one of the two methods below. Note that this server requires an IAM user with RW permissions for your AWS account for S3 and DynamoDB.
+2. Set up your AWS credentials via one of the two methods below. Note that this server requires an IAM user with appropriate permissions for:
+   - S3 (read/write)
+   - DynamoDB (read/write)
+   - EC2 (describe, start, stop instances)
+   - Lambda (invoke, list, get functions)
+   - CloudWatch (get metrics, list metrics, get logs)
+   - Bedrock (invoke models, get metrics)
+   Additionally, for Bedrock logging:
+   - S3 permissions for `bedrock-logs-mcp` and `bedrock-large-data-mcp` buckets
+   - CloudWatch Logs permissions for `/aws/bedrock/*` log groups
 - Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (defaults to `us-east-1`)
 - Default AWS credential chain (set up via AWS CLI with `aws configure`)
 3. Add the following to your `claude_desktop_config.json` file:
@@ -52,6 +61,19 @@ npx -y @smithery/cli install mcp-server-aws --client claude
   - Total requests and token counts
   - Request patterns over time
 - **bedrock_get_token_metrics**: Get detailed TPM (tokens per minute) and RPM (requests per minute) metrics with peak and average values
+
+### Bedrock Operations
+
+#### Model Logging
+- **bedrock_get_model_stats**: Get detailed model invocation statistics
+- **bedrock_analyze_requests**: Analyze token usage and request patterns
+- **bedrock_get_token_metrics**: Get TPM and RPM metrics
+
+#### Log Storage Locations
+- **Standard Logs**: `bedrock-logs-mcp` (us-west-2)
+- **Large Data**: `bedrock-large-data-mcp` (us-west-2)
+
+See [support-help.md](support-help.md) for detailed information about Bedrock logging configuration and analysis.
 
 ### S3 Operations
 

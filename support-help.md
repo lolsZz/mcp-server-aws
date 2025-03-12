@@ -194,6 +194,47 @@ Two S3 buckets have been configured for comprehensive Bedrock logging:
 
 > **Note**: The system automatically routes data to the appropriate bucket based on size and content type. References to large data entries are maintained in the standard logs for correlation.
 
+### Automated Metrics Collection
+
+The following metrics are automatically collected and can be used in support tickets:
+
+#### CloudWatch Metrics
+- Invocation counts (per minute, hour, day)
+- Token usage (input and output)
+- Latency percentiles (p50, p90, p99)
+- Error rates and throttling events
+- Cross-region performance metrics
+
+#### S3 Log Analytics
+- Large payload frequencies
+- Binary content distribution
+- High-token request patterns
+- Cross-region request patterns
+
+### Storage Management
+
+#### Lifecycle Policies
+Both buckets are configured with lifecycle policies to manage storage costs:
+
+1. **Standard Logs Bucket** (`bedrock-logs-mcp`):
+   - Logs are kept for 30 days in standard storage
+   - After 30 days, logs are automatically deleted
+
+2. **Large Data Bucket** (`bedrock-large-data-mcp`):
+   - Data is kept for 30 days in standard storage
+   - After 30 days, data is moved to Glacier storage
+   - After 90 days, data is automatically deleted
+
+To retrieve historical data older than 30 days, use:
+```python
+# For data in Glacier storage
+await use_mcp_tool("aws", "s3_restore_object", {
+    "bucket_name": "bedrock-large-data-mcp",
+    "object_key": "path/to/archived/data",
+    "days": 7  # Number of days to keep restored copy available
+})
+```
+
 ### Required Permissions
 Ensure the following permissions are set for Bedrock logging:
 
